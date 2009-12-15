@@ -1,0 +1,4 @@
+:server:   testbed-epp.nominet.org.uk
+:port:     700
+:tag:      FOO
+:password: secret
