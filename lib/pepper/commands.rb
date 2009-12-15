@@ -24,7 +24,6 @@ module Pepper
                     xml.objURI "http://www.nominet.org.uk/epp/xml/nom-domain-2.0"
                   }
                 }
-                xml.clTRID "ABC-12345"
               }
             }
           end
