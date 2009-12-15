@@ -5,6 +5,7 @@ module Pepper
       
       element :result, :class => Result
       element :result, :as => :result_code, :value => :code
+      element :resData, :as => :resdata, :class => Resdata
     end
   end
 end

@@ -29,5 +29,23 @@ class LivePepperTest < Test::Unit::TestCase
       end
     end
   end
+  
+  context "command" do
+    setup do
+      @hash = YAML.load_file( File.join(File.dirname(__FILE__), "live_settings.yaml" ))
+      Pepper.settings = @hash
+    end
+    
+    context "'check'" do
+      should "return available for 'foo.co.uk'" do
+        assert_equal( {"foo.co.uk" => true}, Pepper.check( 'foo.co.uk' ))
+      end
+      
+      should "return correct hash for 'foo.co.uk', 'bar.co.uk' and 'macduff-TAG.co.uk'" do
+        domains = {"foo.co.uk" => true, "bar.co.uk" => true, "macduff-#{@hash[:tag]}.co.uk" => false}
+        assert_equal domains, Pepper.check( *domains.keys )
+      end
+    end
+  end
 
 end
