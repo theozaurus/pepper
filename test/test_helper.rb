@@ -11,4 +11,8 @@ require 'stringio'
 
 class Test::Unit::TestCase
   include RR::Adapters::TestUnit
+  
+  def response(name)
+    Pepper::Stanzas::Epp.parse File.read( File.join(File.dirname(__FILE__),"fixtures", "#{name}.xml") )
+  end
 end

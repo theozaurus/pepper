@@ -3,8 +3,8 @@ require "test_helper"
 
 class PepperTest < Test::Unit::TestCase
   context "logging in" do
-    should "open connection when login called" do
-      mock(Pepper).connect { StringIO.new }
+    should "write login stanza" do
+      mock( Pepper ).write(anything) { response "login_success" }
       Pepper.login
     end
   end
