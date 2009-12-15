@@ -18,7 +18,8 @@ module Pepper
         @port     = opts[:port] || 700
         @lang     = opts[:lang] || "en"
         
-        @parser   = nil
+        @logged_in = false
+        @parser    = nil
       end
       
       def connect
@@ -37,7 +38,7 @@ module Pepper
       end
       
       def write(xml)
-        (self.connection || self.connect).write(xml)
+        (@parser && self.connection || self.connect).write(xml)
         @parser.get_frame
       end
     end
