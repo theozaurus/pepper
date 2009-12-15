@@ -24,7 +24,7 @@ class LivePepperTest < Test::Unit::TestCase
     should "raise error" do
       Pepper.settings = YAML.load_file( File.join(File.dirname(__FILE__), "live_settings.yaml" )).merge( :tag => "FOO" )
       
-      assert_raises Pepper::Error::Login do
+      assert_raises Pepper::Error::Security do
         Pepper.login
       end
     end

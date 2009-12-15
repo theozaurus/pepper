@@ -29,7 +29,6 @@ module Pepper
             }
           end
           r = self.write( builder.to_xml )
-          raise Pepper::Error::Login.new r.response.result.msg.strip unless r.response.result_code == "1000"
         end
         @logged_in = true
       end
