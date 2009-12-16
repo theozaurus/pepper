@@ -27,7 +27,7 @@ spec = Gem::Specification.new do |s|
   # s.rdoc_options      = %w(--main README)
   
   # Add any extra files to include in the gem
-  # s.files             = %w(README) + Dir.glob("./**/*")
+  s.files             = %w(README) + Dir.glob("lib/**/*")
   s.test_files = Dir.glob('test/fixtures/*') + Dir.glob('test/*.rb') + Dir.glob('test/*.example')
   
   s.require_paths     = ["lib"]
