@@ -1,13 +1,13 @@
 require "pepper/stanzas/sax_machinery"
-require "pepper/stanzas/response"
+require "pepper/stanzas/host"
 
 module Pepper
   module Stanzas
-    class Epp
+    class Ns
       include SAXMachine
       
-      element :greeting
-      element :response, :class => Response
+      elements "domain:host", :as => :hosts, :class => Host
+
     end
   end
 end

@@ -56,6 +56,27 @@ module Pepper
           hash.merge( domain => r.response.resdata.chkdata.domain_names_avail.shift == "1")
         }
       end
+      
+      def info(name)
+        login unless @logged_in
+        builder = Nokogiri::XML::Builder.new do |xml|
+          xml.epp("xmlns"              => "urn:ietf:params:xml:ns:epp-1.0", 
+                  "xmlns:xsi"          => "http://www.w3.org/2001/XMLSchema-instance",
+                  "xsi:schemaLocation" => "urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd" ) {
+            xml.command {
+              xml.info {
+                xml.info("xmlns:domain"       => "http://www.nominet.org.uk/epp/xml/nom-domain-2.0",
+                         "xsi:schemaLocation" => "urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd") {
+                  xml.parent.namespace = xml.parent.namespace_definitions.first
+                  xml["domain"].name name
+                }
+              }
+            }
+          }
+        end
+        r = self.write( builder.to_xml )
+        r.response.resdata.infdata.to_hash
+      end
     end
   end
 end

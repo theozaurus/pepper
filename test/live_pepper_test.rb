@@ -46,6 +46,53 @@ class LivePepperTest < Test::Unit::TestCase
         assert_equal domains, Pepper.check( *domains.keys )
       end
     end
+    
+    context "'info'" do
+      should "return correct hash for 'adriana-TAG.co.uk'" do
+        expected = {
+          "reg_status" => "Registered until expiry date.",
+          "name"       => "adriana-#{@hash[:tag].downcase}.co.uk",
+          "cr_id"      => "psamathe@nominet.org.uk",
+          "first_bill" => "th",
+          "recur_bill" => "th",
+          "cl_id"      => @hash[:tag],
+          "ex_date"    => "2010-12-22T00:15:23",
+          "cr_date"    => "2008-12-22T00:15:23",
+          "account"    => {
+            "trad_name"  => "Simple Registrant Trading Ltd",
+            "name"       => "Simple Registrant-#{@hash[:tag]}",
+            "cr_id"      => "psamathe@nominet.org.uk",
+            "cl_id"      => @hash[:tag],
+            "type"       => "LTD",
+            "opt_out"    => "N",
+            "roid"       => "105097-UK",
+            "cr_date"    =>"2009-12-22T00:15:23",
+            "contacts"   => [{
+              "name"       => "Mary Smith",
+              "up_id"      => "psamathe@nominet.org.uk",
+              "cl_id"      => @hash[:tag],
+              "roid"       => "C112040-UK",
+              "phone"      => "01234 567890",
+              "up_date"    => "2009-12-22T00:15:23",
+              "email"      => "mary.smith@ariel-#{@hash[:tag].downcase}.co.uk"
+            }],
+            "addr"       => {
+              "city"       => "Test City",
+              "country"    => "GB",
+              "postcode"   => "TE57 1NG",
+              "street"     => [ "2 Test Street" ],
+              "county"     => "Testshire"
+            }
+          },
+          "ns"         => {
+            "hosts"      => [{
+              "hostname"   => "ns1.ariel-#{@hash[:tag].downcase}.co.uk."
+            }]
+          }
+        }
+        assert_equal( expected, Pepper.info( "adriana-#{@hash[:tag]}.co.uk" ))
+      end
+    end
   end
 
 end

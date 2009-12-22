@@ -1,6 +1,1 @@
-require "sax-machine"
-require "pepper/stanzas/chkdata"
-require "pepper/stanzas/resdata"
-require "pepper/stanzas/result"
-require "pepper/stanzas/response"
 require "pepper/stanzas/epp"
