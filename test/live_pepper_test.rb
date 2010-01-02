@@ -98,6 +98,39 @@ class LivePepperTest < Test::Unit::TestCase
         assert_equal( expected, Pepper.info( "adriana-#{@hash[:tag]}.co.uk" ))
       end
     end
+    
+    context "'create'" do
+      should "register a domain" do
+        expected = {
+          "result"      => { "msg" => "Command completed successfully" },
+          "resdata"     => { },
+          "result_code" => "1000"
+        }
+        options = {
+          "name"    => "#{Time.now.to_i}-testingdomain-#{@hash[:tag]}.co.uk",
+          "account" => {
+            "name"     => "Foo Bar",
+            "type"     => "LTD",
+            "co_no"    => "NI123456",
+            "opt_out"  => "N",
+            "addr"     => {
+              "street"   => "1 Test",
+              "locality" => "Testville",
+              "city"     => "Test",
+              "county"   => "Testshire",
+              "postcode" => "TE57 7ES",
+              "country"  => "GB"
+            },
+            "contacts" => [{
+              "name"     => "Joe Test",
+              "phone"    => "01234 567890",
+              "email"    => "joe@test.com"
+            }]
+          }
+        }
+        assert_equal( expected, Pepper.create( options ) )
+      end
+    end
   end
 
 end
