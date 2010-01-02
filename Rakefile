@@ -15,7 +15,7 @@ spec = Gem::Specification.new do |s|
   
   # Change these as appropriate
   s.name              = "pepper"
-  s.version           = "0.0.1"
+  s.version           = "0.0.2"
   s.summary           = "Provides a simple interface to Nominets EPP service"
   s.description       = "Currently supports connecting to Nominet and running checks on domain names"
   s.author            = "Theo Cushion"
