@@ -7,7 +7,7 @@ require "rubygems"
 require "test/unit"
 require "shoulda"
 require "rr"
-require 'stringio'
+require "time"
 
 class Test::Unit::TestCase
   include RR::Adapters::TestUnit

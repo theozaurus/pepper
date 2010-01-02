@@ -49,6 +49,10 @@ class LivePepperTest < Test::Unit::TestCase
     
     context "'info'" do
       should "return correct hash for 'adriana-TAG.co.uk'" do
+        # We cannot predict exactly when it was created at
+        info       = Pepper.info( "adriana-#{@hash[:tag]}.co.uk" )
+        created_at = Time.xmlschema(info["cr_date"])
+        
         expected = {
           "reg_status" => "Registered until expiry date.",
           "name"       => "adriana-#{@hash[:tag].downcase}.co.uk",
@@ -56,8 +60,8 @@ class LivePepperTest < Test::Unit::TestCase
           "first_bill" => "th",
           "recur_bill" => "th",
           "cl_id"      => @hash[:tag],
-          "ex_date"    => "2010-12-22T00:15:23",
-          "cr_date"    => "2008-12-22T00:15:23",
+          "ex_date"    => (created_at + 2 * 60*60*24*365).strftime("%FT%T"), # 2 years
+          "cr_date"    => created_at.strftime("%FT%T"),
           "account"    => {
             "trad_name"  => "Simple Registrant Trading Ltd",
             "name"       => "Simple Registrant-#{@hash[:tag]}",
@@ -66,14 +70,14 @@ class LivePepperTest < Test::Unit::TestCase
             "type"       => "LTD",
             "opt_out"    => "N",
             "roid"       => "105097-UK",
-            "cr_date"    =>"2009-12-22T00:15:23",
+            "cr_date"    => (created_at + 1 * 60*60*24*365).strftime("%FT%T"), # 1 year
             "contacts"   => [{
               "name"       => "Mary Smith",
               "up_id"      => "psamathe@nominet.org.uk",
               "cl_id"      => @hash[:tag],
               "roid"       => "C112040-UK",
               "phone"      => "01234 567890",
-              "up_date"    => "2009-12-22T00:15:23",
+              "up_date"    => (created_at + 1 * 60*60*24*365).strftime("%FT%T"), # 1 year
               "email"      => "mary.smith@ariel-#{@hash[:tag].downcase}.co.uk"
             }],
             "addr"       => {
@@ -90,6 +94,7 @@ class LivePepperTest < Test::Unit::TestCase
             }]
           }
         }
+        
         assert_equal( expected, Pepper.info( "adriana-#{@hash[:tag]}.co.uk" ))
       end
     end
