@@ -1,6 +1,5 @@
 require "socket"
 require "openssl"
-require "eventmachine"
 
 module Pepper
   module Connection
