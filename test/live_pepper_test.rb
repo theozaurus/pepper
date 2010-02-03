@@ -54,7 +54,7 @@ class LivePepperTest < Test::Unit::TestCase
         created_at = Time.xmlschema(info["cr_date"])
         
         expected = {
-          "reg_status" => "Registered until expiry date.",
+          "reg_status" => info["reg_status"],
           "name"       => "adriana-#{@hash[:tag].downcase}.co.uk",
           "cr_id"      => "psamathe@nominet.org.uk",
           "first_bill" => "th",
@@ -69,16 +69,16 @@ class LivePepperTest < Test::Unit::TestCase
             "cl_id"      => @hash[:tag],
             "type"       => "LTD",
             "opt_out"    => "N",
-            "roid"       => "105097-UK",
+            "roid"       => info["account"]["roid"],
             "cr_date"    => (created_at + 1 * 60*60*24*365).strftime("%FT%T"), # 1 year
             "contacts"   => [{
               "name"       => "Mary Smith",
               "up_id"      => "psamathe@nominet.org.uk",
               "cl_id"      => @hash[:tag],
-              "roid"       => "C112040-UK",
+              "roid"       => info["account"]["contacts"][0]["roid"],
               "phone"      => "01234 567890",
               "up_date"    => (created_at + 1 * 60*60*24*365).strftime("%FT%T"), # 1 year
-              "email"      => "mary.smith@ariel-#{@hash[:tag].downcase}.co.uk"
+              "email"      => "mary.smith@ariel-#{@hash[:tag]}.co.uk"
             }],
             "addr"       => {
               "city"       => "Test City",
@@ -94,6 +94,8 @@ class LivePepperTest < Test::Unit::TestCase
             }]
           }
         }
+        expected["up_date"] = info["up_date"] if info["up_date"]
+        expected["up_id"]   = info["up_id"] if info["up_id"]
         
         assert_equal( expected, Pepper.info( "adriana-#{@hash[:tag]}.co.uk" ))
       end
@@ -129,6 +131,111 @@ class LivePepperTest < Test::Unit::TestCase
           }
         }
         assert_equal( expected, Pepper.create( options ) )
+      end
+    end
+    
+    context "'update'" do
+      should "support adding and removing nameservers" do
+        #http://www.nominet.org.uk/registrars/systems/nominetepp/testbed/
+        options = {
+          "name"       => "adriana-#{@hash[:tag].downcase}.co.uk",
+          "ns"         => {
+            "hosts"      => [
+              {"hostname"   => "ns1.ariel-#{@hash[:tag].downcase}.co.uk."},
+              {"hostname"   => "ns1.demetrius-#{@hash[:tag].downcase}.co.uk."} # this one is getting added
+            ]
+          }
+        }
+        Pepper.update( options )
+        assert_equal options["ns"]["hosts"].map{|e| e["hostname"]}, Pepper.info( "adriana-#{@hash[:tag]}.co.uk" )["ns"]["hosts"].map{|e| e["hostname"]}
+        
+        options = {
+          "name"       => "adriana-#{@hash[:tag].downcase}.co.uk",
+          "ns"         => {
+            "hosts"      => [
+              {"hostname"   => "ns1.ariel-#{@hash[:tag].downcase}.co.uk."},
+            ]
+          }
+        }
+        Pepper.update( options )
+        assert_equal options["ns"]["hosts"].map{|e| e["hostname"]}, Pepper.info( "adriana-#{@hash[:tag]}.co.uk" )["ns"]["hosts"].map{|e| e["hostname"]}
+      end
+
+      should "support adding and removing trad-name" do
+        existing_settings = Pepper.info("demetrius-#{@hash[:tag]}.co.uk")
+        
+        options = {}
+        options["name"]    = existing_settings["name"]
+        options["account"] = existing_settings["account"]
+        options["account"]["trad_name"] = "12345"
+        options["account"].delete("contacts")
+        
+        Pepper.update( options )
+        assert_equal options["account"]["trad_name"], Pepper.info( "demetrius-#{@hash[:tag]}.co.uk" )["account"]["trad_name"]
+        
+        options["account"].delete("trad_name")
+        Pepper.update( options )
+        
+        assert !Pepper.info( "demetrius-#{@hash[:tag]}.co.uk" )["account"].has_key?("trad_name")
+      end
+
+      should "support adding and removing a contact" do
+        existing_settings = Pepper.info("demetrius-#{@hash[:tag]}.co.uk")
+        
+        new_contact = { "name" => "Foobar", "email" => "foo@bar.com", "phone" => "1235" }
+        
+        options = {}
+        options["name"]    = existing_settings["name"]
+        options["account"] = existing_settings["account"]
+        options["account"]["contacts"] << new_contact
+        
+        Pepper.update(options)
+        interested_fields = %w(name phone email)
+        assert_equal options["account"]["contacts"].map{|c| c.reject{|k,v| !interested_fields.include? k}},
+                     Pepper.info("demetrius-#{@hash[:tag]}.co.uk")["account"]["contacts"].map{|c| c.reject{|k,v| !interested_fields.include? k}}
+        
+        options["account"]["contacts"].pop
+        
+        Pepper.update(options)
+        assert_equal options["account"]["contacts"].map{|c| c.reject{|k,v| !interested_fields.include? k}},
+                     Pepper.info("demetrius-#{@hash[:tag]}.co.uk")["account"]["contacts"].map{|c| c.reject{|k,v| !interested_fields.include? k}}
+      end
+      
+      should "support adding a phone number to a contact" do
+        existing_settings = Pepper.info("demetrius-#{@hash[:tag]}.co.uk")
+                
+        options = {}
+        options["name"]    = existing_settings["name"]
+        options["account"] = existing_settings["account"]
+        options["account"]["contacts"][0]["phone"] = "07711 111111"
+        
+        Pepper.update(options)
+        interested_fields = %w(name phone email)
+        assert_equal options["account"]["contacts"].map{|c| c.reject{|k,v| !interested_fields.include? k}}, 
+                     Pepper.info("demetrius-#{@hash[:tag]}.co.uk")["account"]["contacts"].map{|c| c.reject{|k,v| !interested_fields.include? k}}
+        
+        options["account"]["contacts"][0].delete("phone")
+        
+        Pepper.update(options)
+        assert_equal options["account"]["contacts"].map{|c| c.reject{|k,v| !interested_fields.include? k}}, 
+                     Pepper.info("demetrius-#{@hash[:tag]}.co.uk")["account"]["contacts"].map{|c| c.reject{|k,v| !interested_fields.include? k}}
+      end
+      
+      should "support adding and removing a second street line" do
+        existing_settings = Pepper.info("demetrius-#{@hash[:tag]}.co.uk")
+                
+        options = {}
+        options["name"]    = existing_settings["name"]
+        options["account"] = existing_settings["account"]
+        options["account"]["addr"]["street"] = ["second floor", "foo street"]
+        
+        Pepper.update(options)
+        assert_equal options["account"]["addr"], Pepper.info("demetrius-#{@hash[:tag]}.co.uk")["account"]["addr"]
+        
+        options["account"]["addr"]["street"] = ["foo street"]
+        
+        Pepper.update(options)
+        assert_equal options["account"]["addr"], Pepper.info("demetrius-#{@hash[:tag]}.co.uk")["account"]["addr"]
       end
     end
   end

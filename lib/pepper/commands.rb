@@ -78,6 +78,87 @@ module Pepper
         r.response.resdata.infdata.to_hash
       end
       
+      def update(opts = {})
+        # OPTIMIZE: Break this up - it's way to clunky
+        # TODO: DRY this up - very similar to create
+        login unless @logged_in
+        
+        builder = Nokogiri::XML::Builder.new do |xml|
+          xml.epp("xmlns"              => "urn:ietf:params:xml:ns:epp-1.0", 
+                  "xmlns:xsi"          => "http://www.w3.org/2001/XMLSchema-instance",
+                  "xsi:schemaLocation" => "urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd" ) {
+            xml.command {
+              xml.update {
+                xml.update("xmlns:domain"       => "http://www.nominet.org.uk/epp/xml/nom-domain-2.0",
+                           "xsi:schemaLocation" => "http://www.nominet.org.uk/epp/xml/nom-domain-2.0 nom-domain-2.0") {
+                  xml.parent.namespace = xml.parent.namespace_definitions.first
+                  xml["domain"].send(:"name",       opts["name"])
+                  xml["domain"].send(:"first-bill", opts["first_bill"]) if opts.has_key? "first_bill"
+                  xml["domain"].send(:"recur-bill", opts["recur_bill"]) if opts.has_key? "recur_bill"
+                  xml["domain"].send(:"auto-bill",  opts["auto_bill"])  if opts.has_key? "auto_bill"
+                  xml["domain"].send(:"next-bill",  opts["next_bill"])  if opts.has_key? "next_bill"
+                  xml["domain"].send(:"notes",      opts["notes"])      if opts.has_key? "notes"
+                  if opts.has_key? "account"
+                    xml["domain"].account {
+                      xml.update("xmlns:account" => "http://www.nominet.org.uk/epp/xml/nom-account-2.0",
+                                 "xmlns:contact" => "http://www.nominet.org.uk/epp/xml/nom-contact-2.0"){
+                        account = opts["account"]
+                        xml.parent.namespace = xml.parent.namespace_definitions.select{|ns| ns.prefix == "account"}.first
+                        # These will send empty tags on purpose if the information isn't supplied so that these fields are cleared
+                        xml["account"].send(:"trad-name", account["trad_name"])
+                        xml["account"].send(:"type_",     account["type"])
+                        xml["account"].send(:"co-no",     account["co_no"])
+                        xml["account"].send(:"opt-out",   account["opt_out"])
+                        xml["account"].addr {
+                          addr = account["addr"]
+                          street_array = Array[*opts["account"]["addr"]["street"]] # Allows either a single string passed in or an array to work
+                          # This will always produce 2 street lines (they could be empty) - again to ensure you can blank the 2nd line
+                          (street_array + Array.new(2 - street_array.size)).each{|s|
+                            xml.street s
+                          }
+                          %w(locality city county postcode country).each {|f|
+                            # These will send empty tags on purpose if the information isn't supplied so that these fields are cleared
+                            xml.send(f.to_sym, addr[f])
+                          }
+                        }
+                        if account.has_key? "contacts"
+                          contacts = account["contacts"]
+                          # 3 contact elements will always be sent - this allows blanking any contacts that have been removed
+                          (contacts + Array.new(3 - contacts.size)).each_with_index {|c,i|
+                            xml["account"].contact(:order => i+1) {
+                              unless c.nil?
+                                xml["contact"].update {
+                                  %w(name phone email).each {|f|
+                                    xml["contact"].send(f.to_sym, c[f])
+                                  }
+                                }
+                              end
+                            }
+                          }
+                        end
+                      }
+                    }
+                  end
+                  if opts.has_key? "ns"
+                    xml["domain"].ns {
+                      opts["ns"]["hosts"].each {|host|
+                        xml["domain"].host {
+                          xml["domain"].hostName               host["hostname"]           if host.has_key? "hostname"
+                          xml["domain"].hostAddr(:ip => "v4"){ host["hostaddress_ipv4"] } if host.has_key? "hostaddress_ipv4"
+                          xml["domain"].hostAddr(:ip => "v6"){ host["hostaddress_ipv6"] } if host.has_key? "hostaddress_ipv6"
+                        }
+                      }
+                    }
+                  end       
+                }
+              }
+            }
+          }
+        end
+        r = self.write( builder.to_xml )
+        r.response.to_hash
+      end
+      
       def create(opts = {})
         # OPTIMIZE: Break this up - it's way to clunky
         login unless @logged_in
