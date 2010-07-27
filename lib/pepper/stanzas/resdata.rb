@@ -1,6 +1,6 @@
 require "pepper/stanzas/sax_machinery"
 require "pepper/stanzas/chkdata"
-require "pepper/stanzas/domain_infdata"
+require "pepper/stanzas/domain_data"
 
 module Pepper
   module Stanzas
@@ -8,7 +8,8 @@ module Pepper
       include SAXMachine
         
       element "domain:chkData", :as => :chkdata, :class => Chkdata
-      element "domain:infData", :as => :infdata, :class => DomainInfdata
+      element "domain:creData", :as => :credata, :class => DomainData
+      element "domain:infData", :as => :infdata, :class => DomainData
     end
   end
 end

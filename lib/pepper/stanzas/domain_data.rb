@@ -4,7 +4,7 @@ require "pepper/stanzas/ns"
 
 module Pepper
   module Stanzas
-    class DomainInfdata
+    class DomainData
       include SAXMachine
       
       element "domain:name",               :as => :name

@@ -103,13 +103,22 @@ class LivePepperTest < Test::Unit::TestCase
     
     context "'create'" do
       should "register a domain" do
+        time   = Time.now
+        domain = "#{time.to_i}-testingdomain-#{@hash[:tag].downcase}.co.uk"
         expected = {
           "result"      => { "msg" => "Command completed successfully" },
-          "resdata"     => { },
+          "resdata"     => { 
+            "credata" => {
+              "name"    => domain
+              # The presence of ex_data and cr_data is checked, but not the value
+              # "ex_date" => ,
+              # "cr_date" => 
+            }
+          },
           "result_code" => "1000"
         }
         options = {
-          "name"    => "#{Time.now.to_i}-testingdomain-#{@hash[:tag]}.co.uk",
+          "name"    => domain,
           "account" => {
             "name"     => "Foo Bar",
             "type"     => "LTD",
@@ -130,7 +139,16 @@ class LivePepperTest < Test::Unit::TestCase
             }]
           }
         }
-        assert_equal( expected, Pepper.create( options ) )
+        
+        result = Pepper.create( options )
+        
+        assert result["resdata"]["credata"].has_key? "ex_date"
+        assert result["resdata"]["credata"].has_key? "cr_date"
+        
+        assert result["resdata"]["credata"].delete "ex_date"
+        assert result["resdata"]["credata"].delete "cr_date"
+        
+        assert_equal( expected, result )
       end
     end
     
